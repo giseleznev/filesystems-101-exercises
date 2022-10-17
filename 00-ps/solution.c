@@ -83,7 +83,7 @@ void ps(void)
 			continue;
 		}
 
-		report_process(atoi(p_dirent->d_name), path_exe, argv, environ);
+		report_process(atoi(p_dirent->d_name), path_exe, argv + 1, environ);
 
 		for (int i = 0; i < argc; i ++) free(argv[i]);
 		for (int i = 0; i < num_env; i ++) free(environ[i]);
