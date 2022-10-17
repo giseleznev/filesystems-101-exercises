@@ -21,7 +21,7 @@ bool IsPid(char *name)
 
 int ReadVars(char *filename, char **mas, int *num)
 {
-	char buffer[LENGTH_MAX];
+	char buffer[LENGTH_MAX] = {0};
     int fd = open(filename, O_RDONLY);
 	if ( fd < 0 ) return false;
 
@@ -47,7 +47,7 @@ int ReadVars(char *filename, char **mas, int *num)
 void ps(void)
 {
 	DIR* p_proc;
-	char sym_path_exe[SIZE_MAX], path_exe[SIZE_MAX], path_cmdline[SIZE_MAX], path_environ[SIZE_MAX];
+	char sym_path_exe[SIZE_MAX] = {0}, path_exe[SIZE_MAX] = {0}, path_cmdline[SIZE_MAX] = {0}, path_environ[SIZE_MAX] = {0};
 
     if ((p_proc = opendir("/proc/")) == NULL) {
         report_error("/proc/", errno);
