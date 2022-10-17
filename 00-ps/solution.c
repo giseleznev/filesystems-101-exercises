@@ -32,7 +32,7 @@ int ReadVars(char *filename, char **mas, int *num)
 	int prev_pos = 0;
     for( int pos = 0; pos < size_read; pos ++) {
         if (*(buffer + pos) == '\0') {
-            mas[arg_num] = (char*) calloc( pos + 1 - prev_pos );
+            mas[arg_num] = (char*) calloc( 1, pos + 1 - prev_pos );
 			strncpy(mas[arg_num], buffer + prev_pos, pos + 1 - prev_pos);
 			prev_pos = pos + 1;
             arg_num++;
@@ -55,8 +55,8 @@ void ps(void)
     }
 	struct dirent* p_dirent;
 
-	char **argv = (char **)calloc(LENGTH_MAX * sizeof(char *));
-    char **environ = (char **)calloc(LENGTH_MAX * sizeof(char *));
+	char **argv = (char **)calloc(1, LENGTH_MAX * sizeof(char *));
+    char **environ = (char **)calloc(1, LENGTH_MAX * sizeof(char *));
 
 	while ((p_dirent = readdir(p_proc)) != NULL) {
 		int argc, num_env;
