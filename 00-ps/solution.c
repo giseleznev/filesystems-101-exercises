@@ -55,8 +55,8 @@ void ps(void)
     }
 	struct dirent* p_dirent;
 
-	char **argv = (char **)calloc(1, LENGTH_MAX * sizeof(char *));
-    char **environ = (char **)calloc(1, LENGTH_MAX * sizeof(char *));
+	char **argv = (char **)calloc(sizeof(char *), LENGTH_MAX * sizeof(char *));
+    char **environ = (char **)calloc(sizeof(char *), LENGTH_MAX * sizeof(char *));
 
 	while ((p_dirent = readdir(p_proc)) != NULL) {
 		int argc, num_env;
