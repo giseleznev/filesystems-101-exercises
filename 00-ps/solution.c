@@ -38,8 +38,8 @@ int ReadVars(char *filename, char **mas, int *num)
             arg_num++;
         }
     }
-	mas[arg_num] = NULL;
-	*num = arg_num + 1;
+	mas[arg_num-1] = NULL;
+	*num = arg_num;
 
 	return true;
 }
@@ -83,7 +83,7 @@ void ps(void)
 			continue;
 		}
 
-		report_process(atoi(p_dirent->d_name), path_exe, argv + 1, environ);
+		report_process(atoi(p_dirent->d_name), path_exe, argv, environ);
 
 		for (int i = 0; i < argc; i ++) free(argv[i]);
 		for (int i = 0; i < num_env; i ++) free(environ[i]);
