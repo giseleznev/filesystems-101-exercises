@@ -28,9 +28,9 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 	if (strcmp(path, "/hello") != 0) {
 		return -ENOENT;
 	}
-	size_t len = snprintf(0, 0, "hello, %d\n", fuse_get_context()->pid);
-	char *file_contents = (char*)malloc(len);
+	char file_contents[16];
 	sprintf(file_contents, "hello, %d\n", fuse_get_context()->pid);
+	size_t len = strlen(file_contents);
 
 	if ((size_t)off < len) {
 		if (off + size > len)
@@ -38,7 +38,6 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 		memcpy(buf, file_contents + off, size);
 	} else
 		size = 0;
-	free(file_contents);
 	return size;
 }
 
@@ -59,10 +58,10 @@ hellofs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
 	(void)ffi;
 	if (strcmp(path, "/") == 0) {
-		st->st_mode = S_IFDIR | 0775; //0x4000;
+		st->st_mode = S_IFDIR | 0775;
 		st->st_nlink = 2;
 	} else if (strcmp(path, "/hello") == 0) {
-		st->st_mode = S_IFREG | 0400; //0x4000;
+		st->st_mode = S_IFREG | 0400;
 		st->st_nlink = 1;
 		st->st_size = 16;
 	} else {
@@ -81,17 +80,11 @@ hellofs_write(const char *path, const char *buf, size_t size, off_t off,
 }
 
 static int
-hellofs_create(const char *path, mode_t mode, struct fuse_file_info *ffi) {
+hellofs_create(const char *path, mode_t mode, struct fuse_file_info *ffi)
+{
 	(void)path; (void)mode; (void)ffi;
 	return -EROFS;
 }
-
-// static void*
-// hellofs_init(struct fuse_conn_info *conn)
-// {
-// 	(void) conn;
-// 	return NULL;
-// }
 
 static const struct fuse_operations hellofs_ops = {
 	.readdir = hellofs_readdir,
@@ -100,7 +93,6 @@ static const struct fuse_operations hellofs_ops = {
 	.getattr = hellofs_getattr,
 	.create = hellofs_create,
 	.write = hellofs_write,
-	//.init = hellofs_init,
 };
 
 int helloworld(const char *mntp)
