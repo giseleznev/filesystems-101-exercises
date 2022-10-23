@@ -34,8 +34,6 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 	char *file_contents = (char*)malloc(len);
 	sprintf(file_contents, "hello, %d\n", fuse_get_context()->pid);
 
-	len = strlen(file_contents);
-
 	if ((size_t)off < len) {
 		if (off + size > len)
 			size = len - off;
