@@ -49,7 +49,7 @@ hellofs_open(const char *path, struct fuse_file_info *ffi)
 		return -ENOENT;
 
 	if ((ffi->flags & 3) != O_RDONLY)
-		return -EACCES;
+		return -EROFS;
 
 	return 0;
 }
