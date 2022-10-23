@@ -18,8 +18,6 @@ hellofs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 	filler(data, "..", NULL, 0, 0);
 	filler(data, "hello", NULL, 0, 0);
 	return 0;
-
-	return -ENOENT;
 }
 
 static int
@@ -61,10 +59,10 @@ hellofs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
 	(void)ffi;
 	if (strcmp(path, "/") == 0) {
-		st->st_mode = 0x4000;
+		st->st_mode = S_IFDIR | 0775; //0x4000;
 		st->st_nlink = 2;
 	} else if (strcmp(path, "/hello") == 0) {
-		st->st_mode = 0x4000;
+		st->st_mode = S_IFREG | 0400; //0x4000;
 		st->st_nlink = 1;
 		st->st_size = 16;
 	} else {
