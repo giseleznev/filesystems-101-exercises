@@ -7,16 +7,18 @@
 
 static int
 hellofs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
-           off_t off, struct fuse_file_info *ffi)
+           off_t off, struct fuse_file_info *ffi, enum fuse_readdir_flags frf)
 {
-	(void)off; (void)ffi;
+	(void)off; (void)ffi; (void)frf;
 	if (strcmp(path, "/") != 0)
 		return -ENOENT;
 
-	filler(data, ".", NULL, 0);
-	filler(data, "..", NULL, 0);
-	filler(data, "hello", NULL, 0);
+	filler(data, ".", NULL, 0, 0);
+	filler(data, "..", NULL, 0, 0);
+	filler(data, "hello", NULL, 0, 0);
 	return 0;
+
+	return -ENOENT;
 }
 
 static int
@@ -56,8 +58,9 @@ hellofs_open(const char *path, struct fuse_file_info *ffi)
 }
 
 static int
-hellofs_getattr(const char *path, struct stat *st)
+hellofs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
+	(void)ffi;
 	if (strcmp(path, "/") == 0) {
 		st->st_mode = 0x4000;
 		st->st_nlink = 2;
