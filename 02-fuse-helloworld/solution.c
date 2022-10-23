@@ -4,6 +4,7 @@
 #include <fuse.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int
 hellofs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
@@ -29,8 +30,8 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 	if (strcmp(path, "/hello") != 0) {
 		return -ENOENT;
 	}
-	size_t len;
-	char file_contents[32];
+	size_t len = snprintf(0, 0, "hello, %d\n", fuse_get_context()->pid);
+	char *file_contents = (char*)malloc(len);
 	sprintf(file_contents, "hello, %d\n", fuse_get_context()->pid);
 
 	len = strlen(file_contents) + 1;
@@ -41,7 +42,7 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 		memcpy(buf, file_contents + off, size);
 	} else
 		size = 0;
-
+	free(file_contents);
 	return size;
 }
 
