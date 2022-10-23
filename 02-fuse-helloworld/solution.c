@@ -30,7 +30,7 @@ hellofs_read(const char *path, char *buf, size_t size, off_t off,
 		return -ENOENT;
 	}
 	size_t len;
-	char file_contents[16];
+	char file_contents[32];
 	sprintf(file_contents, "hello, %d\n", fuse_get_context()->pid);
 
 	len = strlen(file_contents);
