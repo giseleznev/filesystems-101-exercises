@@ -14,7 +14,8 @@
 #include <liburing.h>
 #include <solution.h>
 
-#define QD 4
+#define READS_NUM 4
+#define QD 8
 #define BS (256 * 1024)
 
 struct io_data {
@@ -55,7 +56,7 @@ int copy(int in, int out)
 		while (file_size > 0) {
             off_t read_size = (file_size > BS) ? BS : file_size;
 
-            if (reads_num + writes_num >= QD) break;
+            if (reads_num > READS_NUM || reads_num + writes_num >= QD) break;
 
 			data = malloc(read_size + sizeof(*data));
 			sqe = io_uring_get_sqe(&ring);
@@ -76,7 +77,7 @@ int copy(int in, int out)
         }
 
 		if (io_uring_submit(&ring) < 0)
-        return -errno;
+        	return -errno;
 
 		while (size_to_write > 0) {
 			ret = io_uring_wait_cqe(&ring, &cqe);
