@@ -27,21 +27,12 @@ struct io_data {
 int get_file_size(int fd, off_t *size) {
     struct stat st;
 
-    if (fstat(fd, &st) < 0 )
-        return -1;
-    if(S_ISREG(st.st_mode)) {
-        *size = st.st_size;
-        return 0;
-    } else if (S_ISBLK(st.st_mode)) {
-        unsigned long long bytes;
-
-        if (ioctl(fd, BLKGETSIZE64, &bytes) != 0)
-            return -1;
-
-        *size = bytes;
-        return 0;
-    }
-    return -1;
+    if (fstat(fd, &st) == -1) {
+		*size = 0;
+      	return -1;
+   	}
+    *size = st.st_size;
+	return 0;
 }
 
 int copy(int in, int out)
