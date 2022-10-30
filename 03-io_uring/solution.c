@@ -37,6 +37,7 @@ int get_file_size(int fd, off_t *size) {
 
 int copy(int in, int out)
 {
+	int ret;
 	struct io_uring ring;
 	off_t file_size, size_to_write, offset = 0;
 	unsigned long reads_num = 0, writes_num = 0;
@@ -58,6 +59,8 @@ int copy(int in, int out)
 
 			data = malloc(read_size + sizeof(*data));
 			sqe = io_uring_get_sqe(&ring);
+			if (!sqe)
+        		return -errno;
 
 			data->read = true;
 			data->offset = offset;
@@ -72,10 +75,13 @@ int copy(int in, int out)
             reads_num++;
         }
 
-		io_uring_submit(&ring);
+		if (io_uring_submit(&ring) < 0)
+        return -errno;
 
 		while (size_to_write > 0) {
-			io_uring_wait_cqe(&ring, &cqe);
+			ret = io_uring_wait_cqe(&ring, &cqe);
+			if (ret != 0)
+                return -errno;
 
 			data = io_uring_cqe_get_data(cqe);
 
