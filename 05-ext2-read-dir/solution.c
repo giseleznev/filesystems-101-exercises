@@ -20,6 +20,7 @@ int report(int img, __le32 adr)
 	memcpy(file_name, entry->name, entry->name_len);
 	file_name[entry->name_len] = '\0';
 	char type = entry->file_type == 2 ? 'd' : 'f';
+	report_file(entry->inode , type, file_name);
 
 	while(size + entry->rec_len < block_size) {
 		size += entry->rec_len;
