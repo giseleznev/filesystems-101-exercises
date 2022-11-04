@@ -55,7 +55,7 @@ int dump_dir(int img, int inode_nr)
 	data_size = inode.i_size;
 
 	for(int i = 0; i < EXT2_N_BLOCKS; i++)
-		report(img, inode.i_block[i]);
+		if(inode.i_block[i] != 0) report(img, inode.i_block[i]);
 
 	return 0;
 }
