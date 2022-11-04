@@ -30,8 +30,11 @@ int copy_indirect_single(int img, int out, __le32 adr)
 	}
 
 	// block_size / 4 - number of stored block numbers
-	for (int i = 0; indirect_block[i] != 0 && i < (block_size / 4); i++)
+	for (int i = 0; i < (block_size / 4); i++) {
+		if (indirect_block[i] == 0) break;
+
 		copy_direct(img, out, indirect_block[i]);
+	}
 
 	free(indirect_block);
 
@@ -48,8 +51,11 @@ int copy_indirect_double(int img, int out, __le32 adr)
 	}
 
 	// block_size / 4 - number of stored block numbers
-	for (int i = 0; double_indirect_block[i] != 0 && i < (block_size / 4); i++)
+	for (int i = 0; i < (block_size / 4); i++) {
+		if (double_indirect_block[i] == 0) break;
+
 		copy_indirect_single(img, out, double_indirect_block[i]);
+	}
 
 	free(double_indirect_block);
 
