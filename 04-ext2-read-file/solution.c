@@ -24,7 +24,10 @@ int copy_indirect_single(int img, int out, __le32 adr)
 	// int as stored 4-byte block numbers
 	int* indirect_block = (int*)malloc(block_size);
 	error = pread(img, indirect_block, block_size, block_size * adr);
-	if ( error < 0 ) return -errno;
+	if ( error < 0 ) {
+		free(indirect_block);
+		return -errno;
+	}
 
 	// block_size / 4 - number of stored block numbers
 	for (int i = 0; indirect_block[i] != 0 && i < (block_size / 4); i++)
@@ -39,7 +42,10 @@ int copy_indirect_double(int img, int out, __le32 adr)
 {
 	int* double_indirect_block = (int*)malloc(block_size);
 	error = pread(img, double_indirect_block, block_size, block_size * adr);
-	if ( error < 0 ) return -errno;
+	if ( error < 0 ) {
+		free(double_indirect_block);
+		return -errno;
+	}
 
 	// block_size / 4 - number of stored block numbers
 	for (int i = 0; double_indirect_block[i] != 0 && i < (block_size / 4); i++)
