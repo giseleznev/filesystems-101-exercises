@@ -59,11 +59,11 @@ int dump_dir(int img, int inode_nr)
 	data_size_left = inode.i_size;
 
 	//for(int i = 0; i < EXT2_NDIR_BLOCKS/*EXT2_N_BLOCKS*/; i++)
-	if (S_ISDIR(inode.i_mode)) {
-		if(inode.i_block[0/*i*/] != 0) {
-			error = report(img, inode.i_block[0/*i*/]);
-			if ( error < 0 ) return -errno;
-		}
-	}
+	// if (S_ISDIR(inode.i_mode)) {
+	// 	if(inode.i_block[0/*i*/] != 0) {
+	// 		error = report(img, inode.i_block[0/*i*/]);
+	// 		if ( error < 0 ) return -errno;
+	// 	}
+	// }
 	return 0;
 }
