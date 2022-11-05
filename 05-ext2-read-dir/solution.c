@@ -20,6 +20,7 @@ int report(int img, __le32 adr)
 	while(size < block_size && size < data_size_left) {
 		entry = (void*) block + size;
 		size += entry->rec_len;
+		if (size > block_size) break;
 		char file_name[EXT2_NAME_LEN + 1];
 		memcpy(file_name, entry->name, entry->name_len);
 		file_name[entry->name_len] = '\0';
