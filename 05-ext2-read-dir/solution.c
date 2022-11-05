@@ -3,7 +3,7 @@
 #include <ext2fs/ext2fs.h>
 #include <errno.h>
 
-int block_size, data_size, error;
+int block_size, data_size_left, error;
 
 int report(int img, __le32 adr)
 {
@@ -17,7 +17,7 @@ int report(int img, __le32 adr)
 	int size = 0;
 	struct ext2_dir_entry_2 *entry;
 
-	while(size < block_size) {
+	while(size < block_size && size < data_size_left) {
 		entry = (void*) block + size;
 		size += entry->rec_len;
 		char file_name[EXT2_NAME_LEN + 1];
@@ -26,6 +26,8 @@ int report(int img, __le32 adr)
 		char type = entry->file_type == 2 ? 'd' : 'f';
 		report_file(entry->inode , type, file_name);
 	}
+
+	data_size_left -= size;
 	free(block);
 
 	return 0;
@@ -52,7 +54,7 @@ int dump_dir(int img, int inode_nr)
 		super.s_inode_size * inode_in_block_needed);
 	if ( error < 0 ) return -errno;
 
-	data_size = inode.i_size;
+	data_size_left = inode.i_size;
 
 	for(int i = 0; i < EXT2_N_BLOCKS; i++)
 		if(inode.i_block[i] != 0) {
