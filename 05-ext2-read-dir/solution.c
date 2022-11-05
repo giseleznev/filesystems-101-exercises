@@ -15,12 +15,12 @@ int report(int img, __le32 adr)
 	}
 
 	int size = 0;
-	struct ext2_dir_entry_2 *entry;
+	struct ext2_dir_entry_2 *entry = (void*) block;
 
-	while(size < block_size && size < data_size_left) {
+	while(size < block_size && size < data_size_left && entry->inode) {
 		entry = (void*) block + size;
 		size += entry->rec_len;
-		if (size > block_size || entry->inode == NULL) break;
+		if (size > block_size) break;
 		char file_name[EXT2_NAME_LEN + 1];
 		memcpy(file_name, entry->name, entry->name_len);
 		file_name[entry->name_len] = '\0';
