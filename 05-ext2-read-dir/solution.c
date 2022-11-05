@@ -15,16 +15,11 @@ int report(int img, __le32 adr)
 	}
 
 	int size = 0;
-	struct ext2_dir_entry_2 *entry = (struct ext2_dir_entry_2 *) block;
-	char file_name[EXT2_NAME_LEN + 1];
-	memcpy(file_name, entry->name, entry->name_len);
-	file_name[entry->name_len] = '\0';
-	char type = entry->file_type == 2 ? 'd' : 'f';
-	report_file(entry->inode , type, file_name);
+	struct ext2_dir_entry_2 *entry;
 
-	while(size + entry->rec_len < block_size) {
+	while(size < block_size) {
+		entry = (void*) block + size;
 		size += entry->rec_len;
-		entry = (void*) entry + entry->rec_len;
 		char file_name[EXT2_NAME_LEN + 1];
 		memcpy(file_name, entry->name, entry->name_len);
 		file_name[entry->name_len] = '\0';
@@ -60,7 +55,9 @@ int dump_dir(int img, int inode_nr)
 	data_size = inode.i_size;
 
 	for(int i = 0; i < EXT2_N_BLOCKS; i++)
-		if(inode.i_block[i] != 0) report(img, inode.i_block[i]);
-
+		if(inode.i_block[i] != 0) {
+			error = report(img, inode.i_block[i]);
+			if ( error < 0 ) return -errno;
+		}
 	return 0;
 }
