@@ -108,14 +108,14 @@ int dump_dir(int img, int inode_nr)
 			error = report_direct(img, inode.i_block[i]);
 			if ( error < 0 ) return -errno;	
 		}
-		else if (i == EXT2_IND_BLOCK) {                         	/* single indirect block */
-			error = report_indirect_single(img, inode.i_block[i]);
-			if ( error < 0 ) return -errno;	
-		}
-		else if (i == EXT2_DIND_BLOCK) {                            /* double indirect block */
-			error = report_indirect_double(img, inode.i_block[i]);
-			if ( error < 0 ) return -errno;
-		}
+		// else if (i == EXT2_IND_BLOCK) {                         	/* single indirect block */
+		// 	error = report_indirect_single(img, inode.i_block[i]);
+		// 	if ( error < 0 ) return -errno;	
+		// }
+		// else if (i == EXT2_DIND_BLOCK) {                            /* double indirect block */
+		// 	error = report_indirect_double(img, inode.i_block[i]);
+		// 	if ( error < 0 ) return -errno;
+		// }
 
 	return 0;
 }
