@@ -20,7 +20,7 @@ int report(int img, __le32 adr)
 	while(size < block_size && size < data_size_left) {
 		entry = (void*) block + size;
 		size += entry->rec_len;
-		if (size > block_size) break;
+		if (size > block_size || entry->inode == NULL) break;
 		char file_name[EXT2_NAME_LEN + 1];
 		memcpy(file_name, entry->name, entry->name_len);
 		file_name[entry->name_len] = '\0';
@@ -58,9 +58,9 @@ int dump_dir(int img, int inode_nr)
 	data_size_left = inode.i_size;
 
 	//for(int i = 0; i < EXT2_NDIR_BLOCKS/*EXT2_N_BLOCKS*/; i++)
-		//if(inode.i_block[i] != 0) {
+		if(inode.i_block[0/*i*/] != 0) {
 			error = report(img, inode.i_block[0/*i*/]);
 			if ( error < 0 ) return -errno;
-	//	}
+		}
 	return 0;
 }
