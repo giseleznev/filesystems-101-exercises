@@ -14,9 +14,9 @@ void find_file(int inode_nr, char type, const char *name)
 	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) {
 		wanted_inode_nr = inode_nr;
 	} else if (wanted_type == 'd' && (strcmp(name, wanted_name) == 0)) {
-		error = ENOTDIR;
-	} else if (wanted_type == 'f' && (strcmp(name, wanted_name) == 0)) {
 		error = ENOENT;
+	} else if (wanted_type == 'f' && (strcmp(name, wanted_name) == 0)) {
+		error = ENOTDIR;
 	}
 }
 
