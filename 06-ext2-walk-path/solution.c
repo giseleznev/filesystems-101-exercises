@@ -265,7 +265,7 @@ int dump_file(int img, const char *path, int out)
 	while((next = strpbrk(slash + 1, "\\/"))) {
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
 		if( inode_num < 0 && error == 0 ) {
-			return -ENOTDIR;
+			return -ENOENT;
 		} else if ( inode_num < 0 && error != 0 ) {
 			return -error;
 		}
@@ -274,7 +274,7 @@ int dump_file(int img, const char *path, int out)
 
 	inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
 	if( inode_num < 0 && error == 0 ) {
-		return -ENOENT;
+		return -ENOTDIR;
 	} else if ( inode_num < 0 && error != 0 ) {
 		return -error;
 	}
