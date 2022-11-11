@@ -227,7 +227,7 @@ int get_inode_dir(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) error = ENOTDIR;
+	if( wanted_inode_nr == -1 ) error = ENOENT;
 	free(name);
 	return wanted_inode_nr;
 }
@@ -240,7 +240,7 @@ int get_inode_file(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) error = ENOENT;
+	if( wanted_inode_nr == -1 ) error = ENOTDIR;
 	free(name);
 	return wanted_inode_nr;
 }
