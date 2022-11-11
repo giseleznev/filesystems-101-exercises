@@ -261,8 +261,7 @@ int dump_file(int img, const char *path, int out)
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
         slash = next;
     }
-	if( inode_num < 0 ) return -ENOENT;
-
+	if( inode_num < 0 ) return -ENOTDIR;
 	inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
 
 	if( inode_num < 0 ) return -ENOENT;
