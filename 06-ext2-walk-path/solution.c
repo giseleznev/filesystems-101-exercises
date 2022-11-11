@@ -13,6 +13,8 @@ void find_file(int inode_nr, char type, const char *name)
 {
 	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) {
 		wanted_inode_nr = inode_nr;
+	} else if (strcmp(name, wanted_name) == 0) {
+		wanted_inode_nr = -2;
 	}
 }
 
@@ -240,7 +242,7 @@ int get_inode_file(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) error = ENOTDIR;
+	if( wanted_inode_nr == -1 ) error = ENOENT;
 	free(name);
 	return wanted_inode_nr;
 }
