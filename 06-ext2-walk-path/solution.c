@@ -13,10 +13,6 @@ void find_file(int inode_nr, char type, const char *name)
 {
 	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) {
 		wanted_inode_nr = inode_nr;
-	} else if (wanted_type == 'd' && (strcmp(name, wanted_name) == 0)) {
-		error = ENOTDIR;
-	} else if (wanted_type == 'f' && (strcmp(name, wanted_name) == 0)) {
-		error = ENOENT;
 	}
 }
 
@@ -231,10 +227,7 @@ int get_inode_dir(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) {
-		free(name);
-		return -1;
-	}
+	if( wanted_inode_nr == -1 ) error = ENOTDIR;
 	free(name);
 	return wanted_inode_nr;
 }
@@ -247,10 +240,7 @@ int get_inode_file(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) {
-		free(name);
-		return -1;
-	}
+	if( wanted_inode_nr == -1 ) error = ENOENT;
 	free(name);
 	return wanted_inode_nr;
 }
@@ -264,20 +254,12 @@ int dump_file(int img, const char *path, int out)
 
 	while((next = strpbrk(slash + 1, "\\/"))) {
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
-		if( inode_num < 0 && error == 0 ) {
-			return -ENOENT;
-		} else if ( inode_num < 0 && error != 0 ) {
-			return -error;
-		}
+		if( error < 0 ) return -error;
         slash = next;
     }
 
 	inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
-	if( inode_num < 0 && error == 0 ) {
-		return -ENOTDIR;
-	} else if ( inode_num < 0 && error != 0 ) {
-		return -error;
-	}
+	if( error < 0 ) return -error;
 
 	return dump_inode(img, inode_num, out);
 }
