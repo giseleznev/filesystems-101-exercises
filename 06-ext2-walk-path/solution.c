@@ -11,7 +11,13 @@ int wanted_inode_nr;
 
 void find_file(int inode_nr, char type, const char *name)
 {
-	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) wanted_inode_nr = inode_nr;
+	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) {
+		wanted_inode_nr = inode_nr;
+	} else if (wanted_type == 'd' && (strcmp(name, wanted_name) == 0)) {
+		error = ENOTDIR;
+	} else if (wanted_type == 'f' && (strcmp(name, wanted_name) == 0)) {
+		error = ENOENT;
+	}
 }
 
 int copy_direct(int img, int out, __le32 adr)
@@ -257,14 +263,15 @@ int dump_file(int img, const char *path, int out)
     int inode_num = EXT2_ROOT_INO; // root inode
 
 	while((next = strpbrk(slash + 1, "\\/"))) {
-		if( inode_num < 0 ) return -ENOTDIR;
+		if( inode_num < 0 ) return -error;
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
         slash = next;
     }
-	if( inode_num < 0 ) return -ENOTDIR;
+	if( inode_num < 0 ) return -error;
+
 	inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
 
-	if( inode_num < 0 ) return -ENOENT;
+	if( inode_num < 0 ) return -error;
 
 	return dump_inode(img, inode_num, out);
 }
