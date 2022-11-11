@@ -230,7 +230,7 @@ int get_inode_dir(int img, int inode_nr, char *name)
 		return -1;
 	}
 	free(name);
-	return 0;
+	return wanted_inode_nr;
 }
 
 int get_inode_file(int img, int inode_nr, char *name)
@@ -246,7 +246,7 @@ int get_inode_file(int img, int inode_nr, char *name)
 		return -1;
 	}
 	free(name);
-	return 0;
+	return wanted_inode_nr;
 }
 
 int dump_file(int img, const char *path, int out)
