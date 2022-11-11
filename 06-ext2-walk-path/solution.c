@@ -4,11 +4,17 @@
 #include <sys/sendfile.h>
 #include <errno.h>
 
-int length = 0;
-int block_size, data_size_left, error;
-int data_size_left_dir;
+int block_size, data_size_left, data_size_left_dir, error;
+char wanted_type;
+char *wanted_name;
+int wanted_inode_nr;
 
-int  copy_direct(int img, int out, __le32 adr)
+void find_file(int inode_nr, char type, const char *name)
+{
+	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) wanted_inode_nr = inode_nr;
+}
+
+int copy_direct(int img, int out, __le32 adr)
 {
 	int length = data_size_left > block_size ? block_size : data_size_left;
 	data_size_left -= length;
@@ -102,8 +108,8 @@ int dump_inode(int img, int inode_nr, int out)
 
 int find_direct(int img, __le32 adr)
 {
-	int length = data_size_left > block_size ? block_size : data_size_left;
-	data_size_left -= length;
+	int length = data_size_left_dir > block_size ? block_size : data_size_left_dir;
+	data_size_left_dir -= length;
 
 	void* block = malloc(block_size);
 	error = pread(img, block, block_size, block_size * adr);
@@ -173,6 +179,12 @@ int find_indirect_double(int img, __le32 adr)
 
 int find_dir(int img, int inode_nr)
 {
+	struct ext2_super_block super;
+	error = pread(img, &super, sizeof(super), 1024);
+	if ( error < 0 ) return -errno;
+
+	block_size = 1024 << super.s_log_block_size;
+
 	int inode_block_group_needed = (inode_nr - 1) / super.s_inodes_per_group;
 	int inode_in_block_needed = (inode_nr - 1) % super.s_inodes_per_group;
 
@@ -205,43 +217,53 @@ int find_dir(int img, int inode_nr)
 	return 0;
 }
 
-int get_inode_dir(int img, int inode_nr, const char *name)
+int get_inode_dir(int img, int inode_nr, char *name)
 {
+	wanted_inode_nr = -1;
+	wanted_type = 'd';
+	wanted_name = name;
 
+	find_dir(img, inode_nr);
+
+	if( wanted_inode_nr == -1 ) {
+		free(name);
+		return -1;
+	}
+	free(name);
+	return 0;
 }
 
-int get_inode_file(int img, int inode_nr, const char *name)
+int get_inode_file(int img, int inode_nr, char *name)
 {
+	wanted_inode_nr = -1;
+	wanted_type = 'f';
+	wanted_name = name;
 
+	find_dir(img, inode_nr);
+
+	if( wanted_inode_nr == -1 ) {
+		free(name);
+		return -1;
+	}
+	free(name);
+	return 0;
 }
 
 int dump_file(int img, const char *path, int out)
 {
-	struct ext2_super_block super;
-	error = pread(img, &super, sizeof(super), 1024);
-	if ( error < 0 ) return -errno;
+	if( *path != '/' ) return -ENOTDIR;
 
-	block_size = 1024 << super.s_log_block_size;
+	const char *slash = &path[0], *next;
+    int inode_num = EXT2_ROOT_INO; // root inode
 
-	for (char *ch_ptr = path; ch_ptr < path + strlen(path); ch_ptr++ ) {
-        if (*ch_ptr == '/') length += 1;
-    }
-    //char **parsed_path = (char**)malloc(length * sizeof(char*));
-	char *slash = path, *next;
-
-    int inode_num = EXT2_ROOT_INO;
-	
-	for ( int i = 0; (next = strpbrk(slash + 1, "\\/")); i++ ){
+	while((next = strpbrk(slash + 1, "\\/"))) {
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
         slash = next;
     }
 
-	dump_inode(ing, get_inode_file(img, inode_num, strdup(slash + 1)), out);
-	
-	for( int i = 0; i < length; i ++ ){
-        free(parsed_path[i]);
-    }
-    free(parsed_path);
+	inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
 
-	return 0;
+	if( inode_num < 0 ) return -ENOENT;
+
+	return dump_inode(img, inode_num, out);
 }
