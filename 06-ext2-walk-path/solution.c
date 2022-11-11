@@ -13,8 +13,6 @@ void find_file(int inode_nr, char type, const char *name)
 {
 	if( wanted_type == type && (strcmp(name, wanted_name) == 0) ) {
 		wanted_inode_nr = inode_nr;
-	} else if (strcmp(name, wanted_name) == 0) {
-		wanted_inode_nr = -2;
 	}
 }
 
@@ -242,7 +240,7 @@ int get_inode_file(int img, int inode_nr, char *name)
 
 	find_dir(img, inode_nr);
 
-	if( wanted_inode_nr == -1 ) error = ENOENT;
+	if( wanted_inode_nr == -1 ) error = ENOTDIR;
 	free(name);
 	return wanted_inode_nr;
 }
@@ -250,15 +248,11 @@ int get_inode_file(int img, int inode_nr, char *name)
 int dump_file(int img, const char *path, int out)
 {
 	if( *path != '/' ) return -ENOTDIR;
-	int length = 0;
-	for ( const char *ch_ptr = path; ch_ptr < path + strlen(path); ch_ptr++ ) {
-        if (*ch_ptr == '/') length += 1;
-    }
 
 	const char *slash = &path[0], *next;
     int inode_num = EXT2_ROOT_INO; // root inode
 
-	while( length > 1 && (next = strpbrk(slash + 1, "\\/")) ) {
+	while((next = strpbrk(slash + 1, "\\/"))) {
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
 		if( error != 0 ) return -error;
         slash = next;
