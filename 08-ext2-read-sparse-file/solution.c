@@ -124,6 +124,6 @@ int dump_file(int img, int inode_nr, int out)
 			error = copy_indirect_double(img, out, inode.i_block[i]);
 			if ( error < 0 ) return -errno;
 		}
-	assert((__u32)written_length == inode.i_size);
+	assert((__u32)written_length == inode.i_size + 1);
 	return 0;
 }
