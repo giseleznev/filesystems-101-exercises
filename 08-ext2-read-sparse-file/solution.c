@@ -35,6 +35,7 @@ int copy_indirect_single(int img, int out, __le32 adr)
 		for (int i = 0; i < (block_size / 4); i++) {
 			copy_direct(img, out, 0);
 		}
+		return 0;
 	}
 	// int as stored 4-byte block numbers
 	int* indirect_block = (int*)malloc(block_size);
@@ -61,6 +62,7 @@ int copy_indirect_double(int img, int out, __le32 adr)
 		for (int i = 0; i < (block_size / 4); i++) {
 			copy_indirect_single(img, out, 0);
 		}
+		return 0;
 	}
 	int* double_indirect_block = (int*)malloc(block_size);
 	error = pread(img, double_indirect_block, block_size, block_size * adr);
