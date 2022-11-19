@@ -8,6 +8,8 @@ int block_size, data_size_left, error;
 
 int copy_direct(int img, int out, __le32 adr)
 {
+	if ( data_size_left == 0 ) return 0;
+
 	int length = data_size_left > block_size ? block_size : data_size_left;
 	data_size_left -= length;
 
