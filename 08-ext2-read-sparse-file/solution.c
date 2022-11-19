@@ -30,9 +30,11 @@ int copy_direct(int img, int out, __le32 adr)
 
 int copy_indirect_single(int img, int out, __le32 adr)
 {
-	// there no indirect blocks, just zeros or nothing
-	if( adr == 0) {
-		copy_direct(img, out, adr);
+	// there are indirect blocks, with zeros or nothing inside
+	if ( adr == 0 ) {
+		for (int i = 0; i < (block_size / 4); i++) {
+			copy_direct(img, out, 0);
+		}
 	}
 	// int as stored 4-byte block numbers
 	int* indirect_block = (int*)malloc(block_size);
@@ -44,8 +46,6 @@ int copy_indirect_single(int img, int out, __le32 adr)
 
 	// block_size / 4 - number of stored block numbers
 	for (int i = 0; i < (block_size / 4); i++) {
-		//if (indirect_block[i] == 0) break;
-
 		copy_direct(img, out, indirect_block[i]);
 	}
 
@@ -56,9 +56,11 @@ int copy_indirect_single(int img, int out, __le32 adr)
 
 int copy_indirect_double(int img, int out, __le32 adr)
 {
-	// there no indirect blocks, just zeros or nothing
-	if( adr == 0) {
-		copy_direct(img, out, adr);
+	// there are indirect blocks, with zeros or nothing inside
+	if ( adr == 0 ) {
+		for (int i = 0; i < (block_size / 4); i++) {
+			copy_indirect_single(img, out, 0);
+		}
 	}
 	int* double_indirect_block = (int*)malloc(block_size);
 	error = pread(img, double_indirect_block, block_size, block_size * adr);
@@ -69,7 +71,6 @@ int copy_indirect_double(int img, int out, __le32 adr)
 
 	// block_size / 4 - number of stored block numbers
 	for (int i = 0; i < (block_size / 4); i++) {
-		//if (double_indirect_block[i] == 0) break;
 
 		copy_indirect_single(img, out, double_indirect_block[i]);
 	}
