@@ -16,7 +16,7 @@ int copy_direct(int img, int out, __le32 adr)
 		error = sendfile(out, img, &offset, length);
 
 		if ( error < 0 ) return -errno;
-	} else {
+	} else if( length > 0 ) {
 		char* Zeros = (char*)malloc(length);
 		memset(Zeros, 0, length);
 		error = pwrite(out, Zeros, length, 0);
