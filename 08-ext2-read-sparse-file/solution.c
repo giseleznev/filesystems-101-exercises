@@ -20,6 +20,7 @@ int copy_direct(int img, int out, __le32 adr)
 		char* Zeros = (char*)malloc(length);
 		memset(Zeros, 0, length);
 		error = pwrite(out, Zeros, length, 0);
+		free(Zeros);
 
 		if ( error < 0 ) return -errno;
 	}
