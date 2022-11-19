@@ -3,6 +3,7 @@
 #include <ext2fs/ext2fs.h>
 #include <sys/sendfile.h>
 #include <errno.h>
+#include <assert.h>
 
 int block_size, data_size_left, error;
 int written_length;
@@ -27,7 +28,7 @@ int copy_direct(int img, int out, __le32 adr)
 
 		if ( error < length ) return -errno;
 	}
-
+	written_length += length;
 	return 0;
 }
 
@@ -123,6 +124,6 @@ int dump_file(int img, int inode_nr, int out)
 			error = copy_indirect_double(img, out, inode.i_block[i]);
 			if ( error < 0 ) return -errno;
 		}
-
+	assert(written_length == inode.i_size);
 	return 0;
 }
