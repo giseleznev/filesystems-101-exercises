@@ -16,7 +16,7 @@ int copy_direct(int img, int out, __le32 adr)
 		error = sendfile(out, img, &offset, length);
 
 		if ( error < 0 ) return -errno;
-	} else if( length > 0 ) {
+	} else if ( length > 0 ) {
 		char* Zeros = (char*)malloc(length);
 		memset(Zeros, 0, length);
 		error = pwrite(out, Zeros, length, 0);
@@ -30,6 +30,10 @@ int copy_direct(int img, int out, __le32 adr)
 
 int copy_indirect_single(int img, int out, __le32 adr)
 {
+	// there no indirect blocks, just zeros or nothing
+	if( adr == 0) {
+		copy_direct(img, out, adr);
+	}
 	// int as stored 4-byte block numbers
 	int* indirect_block = (int*)malloc(block_size);
 	error = pread(img, indirect_block, block_size, block_size * adr);
@@ -52,6 +56,10 @@ int copy_indirect_single(int img, int out, __le32 adr)
 
 int copy_indirect_double(int img, int out, __le32 adr)
 {
+	// there no indirect blocks, just zeros or nothing
+	if( adr == 0) {
+		copy_direct(img, out, adr);
+	}
 	int* double_indirect_block = (int*)malloc(block_size);
 	error = pread(img, double_indirect_block, block_size, block_size * adr);
 	if ( error < 0 ) {
