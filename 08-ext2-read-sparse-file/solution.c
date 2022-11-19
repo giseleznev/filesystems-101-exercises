@@ -5,6 +5,7 @@
 #include <errno.h>
 
 int block_size, data_size_left, error;
+int written_length;
 
 int copy_direct(int img, int out, __le32 adr)
 {
@@ -17,14 +18,14 @@ int copy_direct(int img, int out, __le32 adr)
 		off_t offset = block_size * adr;
 		error = sendfile(out, img, &offset, length);
 
-		if ( error < 0 ) return -errno;
+		if ( error < length ) return -errno;
 	} else if ( length > 0 ) {
 		char* Zeros = (char*)malloc(length);
 		memset(Zeros, 0, length);
 		error = pwrite(out, Zeros, length, 0);
 		free(Zeros);
 
-		if ( error < 0 ) return -errno;
+		if ( error < length ) return -errno;
 	}
 
 	return 0;
