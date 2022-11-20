@@ -76,7 +76,7 @@ void insert_value_to_not_exceeded_node(node *some_node, int key, node *ptr) {
 		some_node->ptr[i + 1] = some_node->ptr[i];
 	}
 	some_node->keys[pos] = key;
-	//printf("inserting to pos %d == %d \n", pos, some_node->n);
+	printf("inserting to pos %d == %d \n", pos, some_node->n);
 	some_node->ptr[/*pos == some_node->n ?*/ pos + 1 /*: pos*/ ] = ptr;
 	++some_node->n;
 }
@@ -84,6 +84,8 @@ void insert_value_to_not_exceeded_node(node *some_node, int key, node *ptr) {
 void insert_value_to_exceeded_node(const unsigned int L, node *some_node, int key, int *parent_key, node **new_brother_node)
 {
 	// allocate, write and return new_brother
+	printf("insert_value_to_not_exceeded_node\n");
+	usleep(10000);
 	insert_value_to_not_exceeded_node(some_node, key, *new_brother_node); // now size is 2*L
 	//some_node->n--;
 
@@ -98,15 +100,15 @@ void insert_value_to_exceeded_node(const unsigned int L, node *some_node, int ke
 		some_node->n--;
 		(*new_brother_node)->n++;
 	}
-	//printf("Left in some_node: %d, in new_brother_node: %d\n", some_node->n, (*new_brother_node)->n);
-	//printf("Some_node: %d\n", some_node->keys[middle]);
-	(*new_brother_node)->ptr[L - 1] = some_node->ptr[L - 1 + middle + 1];
+	// printf("Left in some_node: %d, in new_brother_node: %d\n", some_node->n, (*new_brother_node)->n);
+	// printf("Some_node: %d\n", some_node->keys[middle]);
+	(*new_brother_node)->ptr[L] = some_node->ptr[L + middle + 1];
 }
 
 int insert_one_level(const unsigned int L, node *some_node, int key, int *parent_key, node **new_brother_node, bool can_insert_not_to_leaf)
 {
 	if( some_node->ptr[0] == 0 || can_insert_not_to_leaf ) {
-		//printf("inserting %d to a leaf\n", key);
+		printf("inserting %d to a leaf\n", key);
 		if( some_node->n < 2 * L - 1 ) { // just insert, new_brother_node = NULL
 			insert_value_to_not_exceeded_node(some_node, key, *new_brother_node);
 			return 0;
@@ -117,7 +119,7 @@ int insert_one_level(const unsigned int L, node *some_node, int key, int *parent
 	} else {
 		for( unsigned int i = 0; i < some_node->n; i++ ) {
 			if( key < some_node->keys[i] ) {
-				//printf("key %d is less then %d\n", key, some_node->keys[i]);
+				printf("key %d is less then %d\n", key, some_node->keys[i]);
 				switch( insert_one_level(L, some_node->ptr[i], key, parent_key, new_brother_node, false) ) {
 					case 0:
 						return 0;
@@ -129,14 +131,14 @@ int insert_one_level(const unsigned int L, node *some_node, int key, int *parent
 				}
 			}
 		}
-		//printf("inserting %d not to a leaf to the end\n", key);
+		printf("inserting %d not to a leaf to the end\n", key);
 		// key > som_inode->keys[some_inode->n - 1]
 		switch( insert_one_level(L, some_node->ptr[some_node->n], key, parent_key, new_brother_node, false) ) {
 			case 0:
-				//printf("0\n");
+				printf("0\n");
 				return 0;
 			case 1: // value was inserted lower, continue now, new_brother_node != NULL
-				//printf("1, Some_node with: %d\n", some_node->keys[0]);
+				printf("1, Some_node with: %d\n", some_node->keys[0]);
 				return insert_one_level(L, some_node, *parent_key, parent_key, new_brother_node, true);
 			default:
 				printf("Error!\n");
