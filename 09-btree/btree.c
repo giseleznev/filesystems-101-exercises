@@ -7,8 +7,8 @@
 
 int construct_node(node *new_node, unsigned int L) {
 	new_node->n = 0;
-	new_node->keys = (int*)malloc((2*L) * sizeof(int));
-	new_node->ptr = (node**)calloc((2*L), sizeof(node*));
+	new_node->keys = (int*)calloc((2*L), sizeof(int));
+	new_node->ptr = (node**)calloc((2*L + 1), sizeof(node*));
 	//memset(new_node->ptr, (void*)NULL, (2*L-1) * sizeof(node*));
 
 	return 0;
@@ -346,6 +346,7 @@ void btree_iter_end(struct btree_iter *i)
 		i = i->parent_iter;
 		free(old_iter);
 	}
+	free(i);
 }
 
 bool btree_iter_next(struct btree_iter *i, int *x)
