@@ -1,7 +1,22 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdio.h>
 
+typedef struct node
+{
+	unsigned int n; // between L-1 and 2L-1
+	int *keys; // of size n
+	struct node **ptr; // of size n+1
+} node;
+
+struct btree
+{
+	unsigned int L;
+	node *root;
+};
+
+void display(node *print_node, unsigned int blanks);
 /**
    Implement a B-tree that holds a set of integers. The tree must
    support insertion, deletion, and iteration over all values in it.
