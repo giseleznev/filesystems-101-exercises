@@ -3,19 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-void display(node *print_node, unsigned int blanks) {
-	if (print_node) {
-		unsigned int i;
-		for (i = 1; i <= blanks; i++)
-			printf(" ");
-		for (i = 0; i < print_node->n; i++)
-			printf("%d ", print_node->keys[i]);
-		printf("\n");
-		for (i = 0; i <= print_node->n; i++)
-			display(print_node->ptr[i], blanks + 10);
-	}
-}
+#include "btree.h"
 
 int construct_node(node *new_node, unsigned int L) {
 	new_node->n = 0;
@@ -321,12 +309,12 @@ void btree_delete(struct btree *t, int x)
 	return;
 }
 
-typedef struct btree_iter
-{
-	node* cur_node;
-	struct btree_iter* parent_iter;
-	unsigned int pos;
-} btree_iter;
+// typedef struct btree_iter
+// {
+// 	node* cur_node;
+// 	struct btree_iter* parent_iter;
+// 	unsigned int pos;
+// } btree_iter;
 
 struct btree_iter* btree_iter_start(struct btree *t)
 {
@@ -336,10 +324,16 @@ struct btree_iter* btree_iter_start(struct btree *t)
 		new_iter = (btree_iter*)malloc(sizeof(btree_iter));
 		new_iter->cur_node = most_left;
 		new_iter->parent_iter = old_iter;
-		new_iter->pos = 0;
-	
+		new_iter->pos = -1;
 		most_left = most_left->ptr[0];
 		old_iter = new_iter;
+	}
+	if (most_left->ptr[0] == 0 && most_left->n != 0) {
+		new_iter = (btree_iter*)malloc(sizeof(btree_iter));
+		new_iter->cur_node = most_left;
+		new_iter->parent_iter = old_iter;
+		new_iter->pos = 0;
+		return new_iter;
 	}
 	return old_iter;
 }
@@ -356,17 +350,16 @@ void btree_iter_end(struct btree_iter *i)
 
 bool btree_iter_next(struct btree_iter *i, int *x)
 {
+	*x = i->cur_node->keys[i->pos];
 	if(i->cur_node->ptr[i->pos + 1]) {
 		btree_iter *new_iter = (btree_iter*)malloc(sizeof(btree_iter));
 		new_iter->cur_node = i->cur_node->ptr[i->pos + 1];
 		new_iter->parent_iter = i;
 		new_iter->pos = 0;
 		i = new_iter;
-		*x = i->cur_node->keys[i->pos];
 		return true;
 	} else if (i->pos < i->cur_node->n) {
 		i->pos++;
-		*x = i->cur_node->keys[i->pos];
 		return true;
 	} else if ( i->parent_iter ) {
 		btree_iter *old_iter = i;
