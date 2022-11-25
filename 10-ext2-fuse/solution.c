@@ -454,6 +454,25 @@ int dump_dir_inode(int img, int inode_nr)
 	return 0;
 }
 
+int check_dir_if_exists(int img, const char *path)
+{
+	if( *path != '/' ) return -ENOTDIR;
+
+	const char *slash = &path[0], *next;
+    int inode_num = EXT2_ROOT_INO; // root inode
+
+	while((next = strpbrk(slash + 1, "\\/"))) {
+		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
+		if( error != 0 ) return -error;
+        slash = next;
+    }
+
+	inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
+	if( error != 0 ) return -error;
+
+	return 0;
+}
+
 int dump_dir(int img, const char *path)
 {
 	if( *path != '/' ) return -ENOTDIR;
@@ -491,11 +510,8 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 static int
 ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
-	(void)path; (void)ffi;
-	// if ((ffi->flags & 3) != O_RDONLY)
-	// 	return -EROFS;
-
-	return -ENOENT;
+	(void)ffi;
+	return check_dir_if_exists(Img, path);
 }
 
 static int
