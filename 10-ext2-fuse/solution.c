@@ -495,7 +495,7 @@ ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 	// if ((ffi->flags & 3) != O_RDONLY)
 	// 	return -EROFS;
 
-	return 0;
+	return -ENOENT;
 }
 
 static int
