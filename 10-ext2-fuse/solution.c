@@ -491,9 +491,9 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 static int
 ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
-	(void)path;
-	if ((ffi->flags & 3) != O_RDONLY)
-		return -EROFS;
+	(void)path; (void)ffi;
+	// if ((ffi->flags & 3) != O_RDONLY)
+	// 	return -EROFS;
 
 	return 0;
 }
