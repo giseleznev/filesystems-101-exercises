@@ -489,8 +489,9 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 // ============================================
 
 static int
-ext2fs_open(const char *path, struct fuse_file_info *ffi)
+ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
+	(void)path;
 	if ((ffi->flags & 3) != O_RDONLY)
 		return -EROFS;
 
@@ -533,7 +534,7 @@ ext2fs_create(const char *path, mode_t mode, struct fuse_file_info *ffi)
 static const struct fuse_operations ext2_ops = {
 	.readdir = ext2fs_readdir,
 	.read = ext2fs_read,
-	.open = ext2fs_open,
+	.open = ext2fs_open_,
 	//.getattr = ext2fs_getattr,
 	.create = ext2fs_create,
 	.write = ext2fs_write,
