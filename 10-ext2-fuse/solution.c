@@ -498,23 +498,23 @@ ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 	return 0;
 }
 
-// static int
-// ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
-// {
-// 	(void)ffi;
-// 	if (strcmp(path, "/") == 0) {
-// 		st->st_mode = S_IFDIR | 0775;
-// 		st->st_nlink = 2;
-// 	} else if (strcmp(path, "/hello") == 0) {
-// 		st->st_mode = S_IFREG | 0400;
-// 		st->st_nlink = 1;
-// 		st->st_size = 16;
-// 	} else {
-// 		return -ENOENT;
-// 	}
+static int
+ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
+{
+	(void)ffi; (void)st; (void)path;
+	// if (strcmp(path, "/") == 0) {
+	// 	st->st_mode = S_IFDIR | 0775;
+	// 	st->st_nlink = 2;
+	// } else if (strcmp(path, "/hello") == 0) {
+	// 	st->st_mode = S_IFREG | 0400;
+	// 	st->st_nlink = 1;
+	// 	st->st_size = 16;
+	// } else {
+	// 	return -ENOENT;
+	// }
 
-// 	return 0;
-// }
+	return 0;
+}
 
 static int
 ext2fs_write(const char *path, const char *buf, size_t size, off_t off,
@@ -535,7 +535,7 @@ static const struct fuse_operations ext2_ops = {
 	.readdir = ext2fs_readdir,
 	.read = ext2fs_read,
 	.open = ext2fs_open_,
-	//.getattr = ext2fs_getattr,
+	.getattr = ext2fs_getattr,
 	.create = ext2fs_create,
 	.write = ext2fs_write,
 };
