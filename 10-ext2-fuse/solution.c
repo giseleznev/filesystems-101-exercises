@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <ext2fs/ext2fs.h>
 #include <sys/sendfile.h>
+#include <assert.h>
 
 int Img;
 
@@ -511,7 +512,9 @@ static int
 ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
 	(void)ffi;
-	return check_dir_if_exists(Img, path);
+	int opencode = check_dir_if_exists(Img, path);
+	assert(opencode == 0);
+	return opencode;
 }
 
 static int
@@ -528,6 +531,8 @@ ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 	// } else {
 	// 	return -ENOENT;
 	// }
+	if (check_dir_if_exists(Img, path) < 0)
+		return -error;
 
 	return 0;
 }
