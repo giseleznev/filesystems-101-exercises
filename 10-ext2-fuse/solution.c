@@ -518,7 +518,7 @@ int check_path_if_exists(int img, const char *path)
 
 	int dir_inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
 	int file_inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
-	fprintf(stderr, "%d, %d\n", file_inode_num, dir_inode_num);
+	fprintf(stderr, "%s, %d, %d \n", path, file_inode_num, dir_inode_num);
 	if( file_inode_num < 0 && dir_inode_num < 0 ) return -1;
 	if( file_inode_num > 0 ) return file_inode_num;
 	return dir_inode_num;
@@ -578,10 +578,11 @@ static int
 ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
 	(void)ffi;
+	fprintf(stderr, "getattr: %s\n", path);
 
 	int inode_num = check_path_if_exists(Img, path);
 	if (inode_num < 0)
-		return -error;
+		return -ENOENT;
 
 	if (set_stat_info(st, inode_num) < 0)
 		return -1;
