@@ -521,7 +521,7 @@ int check_path_if_exists(int img, const char *path)
 
 	if( file_inode_num < 0 && dir_inode_num < 0 ) return -1;
 	if( file_inode_num > 0 ) return file_inode_num;
-
+	fprintf(stderr, "%d, %d\n", file_inode_num, dir_inode_num);
 	return dir_inode_num;
 }
 
