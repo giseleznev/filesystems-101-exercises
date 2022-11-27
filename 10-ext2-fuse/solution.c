@@ -272,6 +272,7 @@ int dump_file_inode(int img, int inode_nr, size_t *file_size)
 
 	data_size_left = inode.i_size;
 	*file_size = data_size_left;
+	buffer_offset = 0;
 	file_contents = (char*)malloc(data_size_left);
 
 	for(int i = 0; i < EXT2_N_BLOCKS; i++)
