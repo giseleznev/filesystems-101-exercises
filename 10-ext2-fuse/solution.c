@@ -315,9 +315,6 @@ ext2fs_read(const char *path, char *buf, size_t size, off_t off,
         struct fuse_file_info *ffi)
 {
 	(void)ffi;
-	if (strcmp(path, "/hello") != 0) {
-		return -ENOENT;
-	}
 	size_t len = 0;
 	dump_file(Img, path, &len);
 
