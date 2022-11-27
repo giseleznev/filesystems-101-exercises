@@ -518,10 +518,9 @@ int check_path_if_exists(int img, const char *path)
 
 	int dir_inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
 	int file_inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
-
+	fprintf(stderr, "%d, %d\n", file_inode_num, dir_inode_num);
 	if( file_inode_num < 0 && dir_inode_num < 0 ) return -1;
 	if( file_inode_num > 0 ) return file_inode_num;
-	fprintf(stderr, "%d, %d\n", file_inode_num, dir_inode_num);
 	return dir_inode_num;
 }
 
@@ -548,6 +547,7 @@ static int
 ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
            off_t off, struct fuse_file_info *ffi, enum fuse_readdir_flags frf)
 {
+	fprintf(stderr, "readdir: %s\n", path);
 	(void)off; (void)ffi; (void)frf;
 	int inode_num = check_path_if_exists(Img, path);
 	if (inode_num < 0)
@@ -563,7 +563,7 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 static int
 ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
-	fprintf(stderr, "opendir: %s\n", path);
+	fprintf(stderr, "open: %s\n", path);
 	int flags = ffi->flags & O_ACCMODE;
 	if (flags != O_RDONLY)
 		return -EROFS;
