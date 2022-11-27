@@ -471,6 +471,52 @@ int check_dir_if_exists(int img, const char *path)
 	inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
 	if( error != 0 ) return -error;
 
+	return inode_num;
+}
+
+struct ext2_inode *get_inode_ptr(int img, int inode_nr)
+{
+	struct ext2_super_block super;
+	error = pread(img, &super, sizeof(super), 1024);
+	if ( error < 0 ) return NULL;
+
+	block_size = 1024 << super.s_log_block_size;
+
+	int inode_block_group_needed = (inode_nr - 1) / super.s_inodes_per_group;
+	int inode_in_block_needed = (inode_nr - 1) % super.s_inodes_per_group;
+
+	struct ext2_group_desc group;
+
+	error = pread(img, &group, sizeof(group), block_size * (super.s_first_data_block + 1)
+		+ inode_block_group_needed * sizeof(group));
+	if ( error < 0 ) return NULL;
+
+	struct ext2_inode *inode = (struct ext2_inode*)malloc(sizeof(struct ext2_inode));
+	error = pread(img, inode, sizeof(struct ext2_inode), block_size * group.bg_inode_table +
+		super.s_inode_size * inode_in_block_needed);
+	if ( error < 0 ) return NULL;
+
+	return inode;
+}
+
+int set_stat_info(struct stat *st, int inode_nr)
+{
+	struct ext2_inode *inode = get_inode_ptr(Img, inode_nr);
+	if (inode == NULL) return -1;
+
+	st->st_ino = inode_nr;
+	st->st_mode = inode->i_mode;
+	st->st_nlink = inode->i_links_count;
+	st->st_uid = inode->i_uid;
+	st->st_gid = inode->i_gid;
+	st->st_size = inode->i_size;
+	st->st_blksize = block_size;
+	st->st_blocks = inode->i_blocks;
+	st->st_atime = inode->i_atime;
+	st->st_mtime = inode->i_mtime;
+	st->st_ctime = inode->i_ctime;
+
+	free(inode);
 	return 0;
 }
 
@@ -520,19 +566,14 @@ ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 static int
 ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
-	(void)ffi; (void)st; (void)path;
-	// if (strcmp(path, "/") == 0) {
-	// 	st->st_mode = S_IFDIR | 0775;
-	// 	st->st_nlink = 2;
-	// } else if (strcmp(path, "/hello") == 0) {
-	// 	st->st_mode = S_IFREG | 0400;
-	// 	st->st_nlink = 1;
-	// 	st->st_size = 16;
-	// } else {
-	// 	return -ENOENT;
-	// }
-	if (check_dir_if_exists(Img, path) < 0)
+	(void)ffi;
+
+	int inode_num = check_dir_if_exists(Img, path);
+	if (inode_num < 0)
 		return -error;
+
+	if (set_stat_info(st, inode_num) < 0)
+		return -1;
 
 	return 0;
 }
