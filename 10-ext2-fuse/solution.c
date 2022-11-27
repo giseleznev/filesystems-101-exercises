@@ -503,7 +503,7 @@ int dump_dir_inode(int img, int inode_nr)
 	return 0;
 }
 
-int check_dir_if_exists(int img, const char *path)
+int check_path_if_exists(int img, const char *path)
 {
 	if( *path != '/' ) return -ENOTDIR;
 
@@ -516,10 +516,13 @@ int check_dir_if_exists(int img, const char *path)
         slash = next;
     }
 
-	inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
-	if( error != 0 ) return -error;
+	int dir_inode_num = get_inode_dir(img, inode_num, strdup(slash + 1));
+	int file_inode_num = get_inode_file(img, inode_num, strdup(slash + 1));
 
-	return inode_num;
+	if( file_inode_num < 0 && dir_inode_num < 0 ) return -1;
+	if( file_inode_num > 0 ) return file_inode_num;
+
+	return dir_inode_num;
 }
 
 int dump_dir(int img, const char *path)
@@ -546,9 +549,9 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
            off_t off, struct fuse_file_info *ffi, enum fuse_readdir_flags frf)
 {
 	(void)off; (void)ffi; (void)frf;
-	int inode_num = check_dir_if_exists(Img, path);
+	int inode_num = check_path_if_exists(Img, path);
 	if (inode_num < 0)
-		return -error;
+		return -ENOENT;
 	Data = data;
 	Filler = filler;
 	dump_dir(Img, path);
@@ -564,7 +567,7 @@ ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 	if (flags != O_RDONLY)
 		return -EROFS;
 
-	int inode_num = check_dir_if_exists(Img, path);
+	int inode_num = check_path_if_exists(Img, path);
 	if(inode_num < 0)
 		return -ENOENT;
 	return 0;
@@ -575,7 +578,7 @@ ext2fs_getattr(const char *path, struct stat *st, struct fuse_file_info *ffi)
 {
 	(void)ffi;
 
-	int inode_num = check_dir_if_exists(Img, path);
+	int inode_num = check_path_if_exists(Img, path);
 	if (inode_num < 0)
 		return -error;
 
