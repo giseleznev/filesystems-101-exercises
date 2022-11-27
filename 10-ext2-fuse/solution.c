@@ -509,6 +509,7 @@ int check_path_if_exists(int img, const char *path)
 
 	const char *slash = &path[0], *next;
     int inode_num = EXT2_ROOT_INO; // root inode
+	if( path[1] == '\0' ) return inode_num;
 
 	while((next = strpbrk(slash + 1, "\\/"))) {
 		inode_num = get_inode_dir(img, inode_num, strndup(slash + 1, next - slash - 1));
