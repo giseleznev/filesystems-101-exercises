@@ -336,9 +336,57 @@ ext2fs_read(const char *path, char *buf, size_t size, off_t off,
 void *Data;
 fuse_fill_dir_t Filler;
 
-void report_file(const char *name)
+struct ext2_inode *get_inode_ptr(int img, int inode_nr)
 {
-	Filler(Data, name, NULL, 0, 0);
+	struct ext2_super_block super;
+	error = pread(img, &super, sizeof(super), 1024);
+	if ( error < 0 ) return NULL;
+
+	block_size = 1024 << super.s_log_block_size;
+
+	int inode_block_group_needed = (inode_nr - 1) / super.s_inodes_per_group;
+	int inode_in_block_needed = (inode_nr - 1) % super.s_inodes_per_group;
+
+	struct ext2_group_desc group;
+
+	error = pread(img, &group, sizeof(group), block_size * (super.s_first_data_block + 1)
+		+ inode_block_group_needed * sizeof(group));
+	if ( error < 0 ) return NULL;
+
+	struct ext2_inode *inode = (struct ext2_inode*)malloc(sizeof(struct ext2_inode));
+	error = pread(img, inode, sizeof(struct ext2_inode), block_size * group.bg_inode_table +
+		super.s_inode_size * inode_in_block_needed);
+	if ( error < 0 ) return NULL;
+
+	return inode;
+}
+
+int set_stat_info(struct stat *st, int inode_nr)
+{
+	struct ext2_inode *inode = get_inode_ptr(Img, inode_nr);
+	if (inode == NULL) return -1;
+
+	st->st_ino = inode_nr;
+	st->st_mode = inode->i_mode;
+	st->st_nlink = inode->i_links_count;
+	st->st_uid = inode->i_uid;
+	st->st_gid = inode->i_gid;
+	st->st_size = inode->i_size;
+	st->st_blksize = block_size;
+	st->st_blocks = inode->i_blocks;
+	st->st_atime = inode->i_atime;
+	st->st_mtime = inode->i_mtime;
+	st->st_ctime = inode->i_ctime;
+
+	free(inode);
+	return 0;
+}
+
+void report_file(int inode_nr, const char *name)
+{
+	struct stat st;
+	set_stat_info(&st, inode_nr);
+	Filler(Data, name, &st, 0, 0);
 }
 
 int report_direct(int img, __le32 adr)
@@ -364,7 +412,7 @@ int report_direct(int img, __le32 adr)
 		memcpy(file_name, entry->name, entry->name_len);
 		file_name[entry->name_len] = '\0';
 		//char type = entry->file_type == 2 ? 'd' : 'f';
-		report_file(file_name);
+		report_file(entry->inode, file_name);
 	}
 
 	free(block);
@@ -474,52 +522,6 @@ int check_dir_if_exists(int img, const char *path)
 	return inode_num;
 }
 
-struct ext2_inode *get_inode_ptr(int img, int inode_nr)
-{
-	struct ext2_super_block super;
-	error = pread(img, &super, sizeof(super), 1024);
-	if ( error < 0 ) return NULL;
-
-	block_size = 1024 << super.s_log_block_size;
-
-	int inode_block_group_needed = (inode_nr - 1) / super.s_inodes_per_group;
-	int inode_in_block_needed = (inode_nr - 1) % super.s_inodes_per_group;
-
-	struct ext2_group_desc group;
-
-	error = pread(img, &group, sizeof(group), block_size * (super.s_first_data_block + 1)
-		+ inode_block_group_needed * sizeof(group));
-	if ( error < 0 ) return NULL;
-
-	struct ext2_inode *inode = (struct ext2_inode*)malloc(sizeof(struct ext2_inode));
-	error = pread(img, inode, sizeof(struct ext2_inode), block_size * group.bg_inode_table +
-		super.s_inode_size * inode_in_block_needed);
-	if ( error < 0 ) return NULL;
-
-	return inode;
-}
-
-int set_stat_info(struct stat *st, int inode_nr)
-{
-	struct ext2_inode *inode = get_inode_ptr(Img, inode_nr);
-	if (inode == NULL) return -1;
-
-	st->st_ino = inode_nr;
-	st->st_mode = inode->i_mode;
-	st->st_nlink = inode->i_links_count;
-	st->st_uid = inode->i_uid;
-	st->st_gid = inode->i_gid;
-	st->st_size = inode->i_size;
-	st->st_blksize = block_size;
-	st->st_blocks = inode->i_blocks;
-	st->st_atime = inode->i_atime;
-	st->st_mtime = inode->i_mtime;
-	st->st_ctime = inode->i_ctime;
-
-	free(inode);
-	return 0;
-}
-
 int dump_dir(int img, const char *path)
 {
 	if( *path != '/' ) return -ENOTDIR;
@@ -544,8 +546,9 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
            off_t off, struct fuse_file_info *ffi, enum fuse_readdir_flags frf)
 {
 	(void)off; (void)ffi; (void)frf;
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
+	int inode_num = check_dir_if_exists(Img, path);
+	if (inode_num < 0)
+		return -error;
 	Data = data;
 	Filler = filler;
 	dump_dir(Img, path);
