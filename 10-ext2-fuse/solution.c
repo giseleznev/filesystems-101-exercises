@@ -560,10 +560,14 @@ ext2fs_readdir(const char *path, void *data, fuse_fill_dir_t filler,
 static int
 ext2fs_open_(const char *path, struct fuse_file_info *ffi)
 {
-	(void)ffi;
-	int opencode = check_dir_if_exists(Img, path);
-	assert(opencode == 0);
-	return opencode;
+	int flags = ffi->flags & O_ACCMODE;
+	if (flags != O_RDONLY)
+		return -EROFS;
+
+	int inode_num = check_dir_if_exists(Img, path);
+	if(inode_num < 0)
+		return -ENOENT;
+	return 0;
 }
 
 static int
