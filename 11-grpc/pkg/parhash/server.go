@@ -105,9 +105,11 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (resp *parhashpb.ParHashResp, err error) {
-	var total_backends = len(s.conf.BackendAddrs)
-	var clients = make([]hashpb.HashSvcClient, total_backends)
-	var connections = make([]*grpc.ClientConn, total_backends)
+	var (
+		total_backends = len(s.conf.BackendAddrs)
+		clients = make([]hashpb.HashSvcClient, total_backends)
+		connections = make([]*grpc.ClientConn, total_backends)
+	)
 
 	for i := range clients {
 		//from sum.go
