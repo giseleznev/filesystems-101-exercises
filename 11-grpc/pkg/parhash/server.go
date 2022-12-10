@@ -113,7 +113,7 @@ func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (r
 
 	for i := range clients {
 		//from sum.go
-		connections[i], err := grpc.Dial(s.conf.BackendAddrs[i],
+		connections[i], err = grpc.Dial(s.conf.BackendAddrs[i],
 			grpc.WithInsecure(), /* allow non-TLS connections */
 		)
 		if err != nil {
