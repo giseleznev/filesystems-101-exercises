@@ -2,9 +2,15 @@ package parhash
 
 import (
 	"context"
+	"crypto/sha256"
+	"net"
+	"sync"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"
+
+	hashpb "fs101ex/pkg/gen/hashsvc"
+	parhashpb "fs101ex/pkg/gen/hashsvc"
 )
 
 type Config struct {
@@ -39,6 +45,15 @@ type Server struct {
 	conf Config
 
 	sem *semaphore.Weighted
+
+	//from server.go
+	stop context.CancelFunc
+	l    net.Listener
+	wg   sync.WaitGroup
+
+	//extra
+	lock  sync.Mutex
+	last_backend int
 }
 
 func New(conf Config) *Server {
@@ -51,16 +66,88 @@ func New(conf Config) *Server {
 func (s *Server) Start(ctx context.Context) (err error) {
 	defer func() { err = errors.Wrap(err, "Start()") }()
 
-	/* implement me */
+	ctx, s.stop = context.WithCancel(ctx)
+
+	s.l, err = net.Listen("tcp", s.conf.ListenAddr)
+	if err != nil {
+		return err
+	}
+
+	srv := grpc.NewServer()
+	parhashpb.RegisterParallelHashSvcServer(srv, s)
+
+	s.wg.Add(2)
+	go func() {
+		defer s.wg.Done()
+
+		srv.Serve(s.l)
+	}()
+	go func() {
+		defer s.wg.Done()
+
+		<-ctx.Done()
+		s.l.Close()
+	}()
 
 	return nil
 }
 
 func (s *Server) ListenAddr() string {
-	/* implement me */
-	return ""
+	return s.l.Addr().String()
 }
 
 func (s *Server) Stop() {
-	/* implement me */
+	s.stop()
+	s.wg.Wait()
+}
+
+func (s *Server) ParallelHash(ctx context.Context, req *hashpb.ParHashReq) (resp *hashpb.ParHashResp, err error) {
+	var total_backends = len(s.conf.BackendAddrs)
+	var clients = make([]hashpb.HashSvcClient, total_backends)
+	var connections = make([]*grpc.ClientConn, total_backends)
+
+	for i := range clients {
+		//from sum.go
+		connections[i], err := grpc.Dial(s.conf.BackendAddrs[i],
+			grpc.WithInsecure(), /* allow non-TLS connections */
+		)
+		if err != nil {
+			log.Fatalf("failed to connect to %q: %v", s.conf.BackendAddrs[i], err)
+		}
+		defer connections[i].Close()
+	
+		clients[i] = hashpb.NewHashSvcClient(connections[i])
+	}
+	//from sum.go
+	var (
+		wg     = workgroup.New(workgroup.Config{Sem: s.sem})
+		hashes := make([][]byte, len(req.Data))
+		lock   sync.Mutex
+	)
+	for i := range req.Data {
+		hash_num := i
+
+		wg.Go(ctx, func(ctx context.Context) (err error) {
+			s.lock.Lock()
+			num_backend = s.last_backend
+			s.last_backend = (s.last_backend + 1) % total_backends
+			s.lock.Unlock()
+
+			resp, err := clients[num_backend].Hash(ctx, &hashpb.HashReq{Data: req.Data[hash_num]})
+			if err != nil {
+				return err
+			}
+
+			lock.Lock()
+			hashes[hash_num] = resp.Hash
+			lock.Unlock()
+
+			return nil
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		log.Fatalf("failed to hash files: %v", err)
+	}
+	//h := sha256.Sum256(req.Data)
+	return &parhashpb.ParHashResp{Hashes: hashes}, nil
 }
