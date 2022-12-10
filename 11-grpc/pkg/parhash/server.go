@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	hashpb "fs101ex/pkg/gen/hashsvc"
-	parhashpb "fs101ex/pkg/gen/hashsvc"
+	parhashpb "fs101ex/pkg/gen/parhashsvc"
 
 	"fs101ex/pkg/workgroup"
 )
