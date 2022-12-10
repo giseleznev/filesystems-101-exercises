@@ -11,6 +11,8 @@ import (
 
 	hashpb "fs101ex/pkg/gen/hashsvc"
 	parhashpb "fs101ex/pkg/gen/hashsvc"
+
+	"fs101ex/pkg/workgroup"
 )
 
 type Config struct {
@@ -101,7 +103,7 @@ func (s *Server) Stop() {
 	s.wg.Wait()
 }
 
-func (s *Server) ParallelHash(ctx context.Context, req *hashpb.ParHashReq) (resp *hashpb.ParHashResp, err error) {
+func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (resp *parhashpb.ParHashResp, err error) {
 	var total_backends = len(s.conf.BackendAddrs)
 	var clients = make([]hashpb.HashSvcClient, total_backends)
 	var connections = make([]*grpc.ClientConn, total_backends)
