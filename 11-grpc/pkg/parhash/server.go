@@ -2,12 +2,13 @@ package parhash
 
 import (
 	"context"
-	"crypto/sha256"
 	"net"
 	"sync"
+	"log"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"
+	"google.golang.org/grpc"
 
 	hashpb "fs101ex/pkg/gen/hashsvc"
 	parhashpb "fs101ex/pkg/gen/parhashsvc"
@@ -131,7 +132,7 @@ func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (r
 
 		wg.Go(ctx, func(ctx context.Context) (err error) {
 			s.lock.Lock()
-			num_backend = s.last_backend
+			num_backend := s.last_backend
 			s.last_backend = (s.last_backend + 1) % total_backends
 			s.lock.Unlock()
 
