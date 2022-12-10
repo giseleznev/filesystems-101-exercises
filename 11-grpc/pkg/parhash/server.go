@@ -121,7 +121,7 @@ func (s *Server) ParallelHash(ctx context.Context, req *hashpb.ParHashReq) (resp
 	//from sum.go
 	var (
 		wg     = workgroup.New(workgroup.Config{Sem: s.sem})
-		hashes := make([][]byte, len(req.Data))
+		hashes = make([][]byte, len(req.Data))
 		lock   sync.Mutex
 	)
 	for i := range req.Data {
