@@ -102,8 +102,6 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 	//label?
 	[]string{"backend"}),
   }
-  reg.MustRegister(m.nr_nr_requests)
-  reg.MustRegister(m.subquery_durations)
   return m
 }
 
@@ -126,7 +124,8 @@ func (s *Server) Start(ctx context.Context) (err error) {
 	}
 
 	srv := grpc.NewServer()
-
+	s.conf.Prom.MustRegister(s.metrics.nr_nr_requests)
+	s.conf.Prom.MustRegister(s.metrics.subquery_durations)
 	parhashpb.RegisterParallelHashSvcServer(srv, s)
 
 	s.wg.Add(2)
