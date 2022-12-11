@@ -83,7 +83,7 @@ type Server struct {
 	last_backend int
 
 	//metrics
-	metrics	Metrics
+	metrics	*Metrics
 }
 
 func NewMetrics(reg prometheus.Registerer) *Metrics {
