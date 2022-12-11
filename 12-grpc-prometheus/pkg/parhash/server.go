@@ -83,11 +83,11 @@ type Server struct {
 	last_backend int
 
 	//metrics
-	metrics	Metrics
+	metrics	*Metrics
 }
 
-func NewMetrics(reg prometheus.Registerer) Metrics {
-  return Metrics{
+func NewMetrics(reg prometheus.Registerer) *Metrics {
+  m := &Metrics{
 	nr_nr_requests: prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: "parhash",
 		Name: "nr_requests",
@@ -102,6 +102,9 @@ func NewMetrics(reg prometheus.Registerer) Metrics {
 	//label?
 	[]string{"backend"}),
   }
+	reg.MustRegister(m.nr_nr_requests)
+  	reg.MustRegister(m.subquery_durations)
+  return m
 }
 
 func New(conf Config) *Server {
