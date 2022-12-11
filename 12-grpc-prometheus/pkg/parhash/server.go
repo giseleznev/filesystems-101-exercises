@@ -62,11 +62,11 @@ type Config struct {
 //     with 24 exponentially growing buckets ranging from 0.1ms to 10s.
 //
 // Both performance counters must be placed to Prometheus namespace "parhash".
-// type Metrics struct {
-// 	//counter and histogram
-// 	nr_nr_requests		prometheus.Counter
-// 	subquery_durations	*prometheus.HistogramVec
-// }
+type Metrics struct {
+	//counter and histogram
+	nr_nr_requests		prometheus.Counter
+	subquery_durations	*prometheus.HistogramVec
+}
 
 type Server struct {
 	conf Config
