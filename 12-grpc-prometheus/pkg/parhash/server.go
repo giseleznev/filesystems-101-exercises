@@ -83,47 +83,32 @@ type Server struct {
 	last_backend int
 
 	//metrics
-	nr_nr_requests	prometheus.Counter
-	subquery_durations	*prometheus.HistogramVec
-	//metrics	Metrics
+	metrics	Metrics
 }
 
-// func NewMetrics(reg prometheus.Registerer) Metrics {
-//   return Metrics{
-// 	nr_nr_requests: prometheus.NewCounter(prometheus.CounterOpts{
-// 		Namespace: "parhash",
-// 		Name: "nr_nr_requests",
-// 		Help: "a counter that is incremented every time a call is made to ParallelHash()",
-// 	}),
-//     subquery_durations: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-// 		Namespace: "parhash",
-// 		Name: "subquery_durations",
-// 		Buckets: prometheus.ExponentialBuckets(100, 10000000, 24),
-// 		Help: "a histogram that tracks durations of calls to backends",
-// 	},
-// 	//label?
-// 	[]string{"backend"}),
-//   }
-// }
+func NewMetrics(reg prometheus.Registerer) Metrics {
+  return Metrics{
+	nr_nr_requests: prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "parhash",
+		Name: "nr_requests",
+		Help: "a counter that is incremented every time a call is made to ParallelHash()",
+	}),
+    subquery_durations: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "parhash",
+		Name: "subquery_durations",
+		Buckets: prometheus.ExponentialBuckets(100, 10000000, 24),
+		Help: "a histogram that tracks durations of calls to backends",
+	},
+	//label?
+	[]string{"backend"}),
+  }
+}
 
 func New(conf Config) *Server {
 	return &Server{
 		conf: conf,
 		sem:  semaphore.NewWeighted(int64(conf.Concurrency)),
-		nr_nr_requests:	prometheus.NewCounter(prometheus.CounterOpts{
-					Namespace: "parhash",
-					Name: "abc_nr_requests",
-					Help: "a counter that is incremented every time a call is made to ParallelHash()",
-				}),
-		subquery_durations:	prometheus.NewHistogramVec(prometheus.HistogramOpts{
-					Namespace: "parhash",
-					Name: "subquery_durations",
-					Buckets: prometheus.ExponentialBuckets(100, 10000000, 24),
-					Help: "a histogram that tracks durations of calls to backends",
-				},
-				//label?
-				[]string{"backend"}),
-		//metrics: NewMetrics(conf.Prom),
+		metrics: NewMetrics(conf.Prom),
 	}
 }
 
@@ -138,8 +123,6 @@ func (s *Server) Start(ctx context.Context) (err error) {
 	}
 
 	srv := grpc.NewServer()
-	s.conf.Prom.MustRegister(s.nr_nr_requests)
-	s.conf.Prom.MustRegister(s.subquery_durations)
 	parhashpb.RegisterParallelHashSvcServer(srv, s)
 
 	s.wg.Add(2)
@@ -168,7 +151,7 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (resp *parhashpb.ParHashResp, err error) {
-	s.nr_nr_requests.Inc()
+	s.metrics.nr_nr_requests.Inc()
 	var (
 		total_backends = len(s.conf.BackendAddrs)
 		clients = make([]hashpb.HashSvcClient, total_backends)
@@ -205,7 +188,7 @@ func (s *Server) ParallelHash(ctx context.Context, req *parhashpb.ParHashReq) (r
 			start := time.Now()
 			resp, err := clients[num_backend].Hash(ctx, &hashpb.HashReq{Data: req.Data[hash_num]})
 			finish := time.Since(start)
-			s.subquery_durations.With(prometheus.Labels{"backend": s.conf.BackendAddrs[num_backend]}).Observe(float64(finish.Microseconds()))
+			s.metrics.subquery_durations.With(prometheus.Labels{"backend": s.conf.BackendAddrs[num_backend]}).Observe(float64(finish.Microseconds()))
 			if err != nil {
 				return err
 			}
