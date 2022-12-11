@@ -112,7 +112,7 @@ func New(conf Config) *Server {
 		sem:  semaphore.NewWeighted(int64(conf.Concurrency)),
 		nr_nr_requests:	prometheus.NewCounter(prometheus.CounterOpts{
 					Namespace: "parhash",
-					Name: "nr_nr_requests",
+					Name: "abc_nr_requests",
 					Help: "a counter that is incremented every time a call is made to ParallelHash()",
 				}),
 		subquery_durations:	prometheus.NewHistogramVec(prometheus.HistogramOpts{
