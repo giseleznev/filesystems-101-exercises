@@ -1,11 +1,22 @@
 package parhash
 
-import (
+import (	
 	"context"
+	"net"
+	"sync"
+	"log"
+	"time"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/semaphore"
+	"google.golang.org/grpc"
+
+	hashpb "fs101ex/pkg/gen/hashsvc"
+	parhashpb "fs101ex/pkg/gen/parhashsvc"
+
+	"fs101ex/pkg/workgroup"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Config struct {
